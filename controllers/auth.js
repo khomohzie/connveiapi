@@ -6,16 +6,14 @@ const expressJwt = require("express-jwt");
 const errorHandler = require("../helpers/dbErrorHandler");
 const _ = require("lodash");
 const { OAuth2Client } = require("google-auth-library");
-// mailgun
-const mailgun = require("mailgun-js");
-const mg = mailgun({
-	apiKey: process.env.MAILGUN_API_KEY,
-	domain: process.env.DOMAIN,
-});
 
-exports.preSignup = (req, res) => {
+// Nodemailer
+const transporter = require("../helpers/email");
+
+exports.preSignup = async (req, res) => {
 	const { name, email, password } = req.body;
-	User.findOne({ email: email.toLowerCase() }, (err, user) => {
+
+	User.findOne({ email: email.toLowerCase() }, async (err, user) => {
 		if (user) {
 			return res.status(400).json({
 				error: "Email is taken",
@@ -27,24 +25,27 @@ exports.preSignup = (req, res) => {
 			{ expiresIn: "10m" }
 		);
 
-		const emailData = {
-			from: process.env.EMAIL_FROM,
-			to: email,
-			subject: `Account activation link`,
-			html: `
+		const msg = `
             <p>Please use the following link to activate your acccount:</p>
             <p>${process.env.CLIENT_URL}/auth/account/activate/${token}</p>
             <hr />
             <p>This email may contain sensitive information</p>
-            <p>https://connvei.com</p>
-        `,
-		};
+            <p>https://connvei.vercel.app</p>
+        `;
 
-		mg.messages().send(emailData, function (error, body) {
-			return res.json({
-				message: `Email has been sent to ${email}. Follow the instructions to activate your account. Link expires in 10min. Make sure to check your spam folder.`,
+		await transporter(email, "Account activation link", msg)
+			.then((data) => {
+				return res.json({
+					message: `Email has been sent to ${email}. Follow the instructions to activate your account. Link expires in 10min. Make sure to check your spam folder.`,
+					data: data,
+				});
+			})
+			.catch((err) => {
+				return res.json({
+					message: "Failed to send activation email. Try again.",
+					error: err,
+				});
 			});
-		});
 	});
 };
 
@@ -110,7 +111,7 @@ exports.signup = (req, res) => {
 						});
 					}
 					return res.json({
-						message: "Singup success! Please signin",
+						message: "Signup success! Please signin",
 					});
 				});
 			}
@@ -234,32 +235,39 @@ exports.forgotPassword = (req, res) => {
 		);
 
 		// email
-		const emailData = {
-			from: process.env.EMAIL_FROM,
-			to: email,
-			subject: `Password reset link`,
-			html: `
+		const mg = `
             <p>Please use the following link to reset your password:</p>
             <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
             <hr />
             <p>This email may contain sensitive information</p>
-            <p>https://connvei.com</p>
-        `,
-		};
+            <p>https://connvei.vercel.app</p>
+        `;
 
 		// populating the db > user > resetPasswordLink
 
-		return user.updateOne({ resetPasswordLink: token }, (err, success) => {
-			if (err) {
-				return res.json({ error: errorHandler(err) });
-			} else {
-				mg.messages().send(emailData, function (error, body) {
-					return res.json({
-						message: `Email has been sent to ${email}. Follow the instructions to reset your password. Link expires in 10min. Make sure to check your spam folder.`,
-					});
-				});
+		return user.updateOne(
+			{ resetPasswordLink: token },
+			async (err, success) => {
+				if (err) {
+					return res.json({ error: errorHandler(err) });
+				} else {
+					await transporter(email, "Password reset link", mg)
+						.then((data) => {
+							return res.json({
+								message: `Email has been sent to ${email}. Follow the instructions to reset your password. Link expires in 10min. Make sure to check your spam folder.`,
+								data: data,
+							});
+						})
+						.catch((err) => {
+							return res.json({
+								message:
+									"Failed to send reset link. Try again.",
+								error: err,
+							});
+						});
+				}
 			}
-		});
+		);
 	});
 };
 

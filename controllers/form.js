@@ -1,58 +1,65 @@
-const mailgun = require("mailgun-js");
-const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.DOMAIN });
+const transporter = require("../helpers/email");
 
-exports.contactForm = (req, res) => {
-    const { email, name, message } = req.body;
-    // console.log(req.body);
+exports.contactForm = async (req, res) => {
+	const { email, name, message } = req.body;
 
-    const emailData = {
-        to: process.env.EMAIL_TO,
-        from: email,
-        subject: `Contact form - ${process.env.APP_NAME}`,
-        text: `Email received from contact form \n Sender name: ${name} \n Sender email: ${email} \n Sender message: ${message}`,
-        html: `
+	const mg = `
             <h4>Email received from contact form:</h4>
             <p>Sender name: ${name}</p>
             <p>Sender email: ${email}</p>
             <p>Sender message: ${message}</p>
             <hr />
             <p>This email may contain sensitive information</p>
-            <p>https://connvei.com</p>
-        `
-    }
+            <p>https://connvei.vercel.app</p>
+        `;
 
-    mg.messages().send(emailData, function (error, body) {
-        return res.json({
-            success: true
-        });
-    });
-}
+	await transporter(email, `Contact form - ${process.env.APP_NAME}`, mg)
+		.then((data) => {
+			return res.json({
+				success: true,
+				data: data,
+			});
+		})
+		.catch((err) => {
+			return res.json({
+				message: "Failed to send email",
+				error: err,
+			});
+		});
+};
 
-exports.contactBlogAuthorForm = (req, res) => {
-    const { authorEmail, email, name, message } = req.body;
-    // console.log(req.body);
+exports.contactBlogAuthorForm = async (req, res) => {
+	const { authorEmail, email, name, message } = req.body;
+	// console.log(req.body);
 
-    let maillist = [authorEmail, process.env.EMAIL_TO];
+	let maillist = [authorEmail, process.env.EMAIL_TO];
 
-    const emailData = {
-        to: maillist,
-        from: email,
-        subject: `Someone messaged you from ${process.env.APP_NAME}`,
-        text: `Email received from contact form \n Sender name: ${name} \n Sender email: ${email} \n Sender message: ${message}`,
-        html: `
+	const mg = `
             <h4>Message received from:</h4>
             <p>name: ${name}</p>
             <p>Email: ${email}</p>
             <p>Message: ${message}</p>
             <hr />
             <p>This email may contain sensitive information</p>
-            <p>https://connvei.com</p>
-        `
-    };
+            <p>https://connvei.vercel.app</p>
+        `;
 
-    mg.messages().send(emailData, function (error, body) {
-        return res.json({
-            success: true
-        });
-    });
+	await transporter(
+		maillist,
+		`Someone messaged you from ${process.env.APP_NAME}`,
+		mg,
+		email
+	)
+		.then((data) => {
+			return res.json({
+				success: true,
+				data: data,
+			});
+		})
+		.catch((err) => {
+			return res.json({
+				message: "Failed to send email",
+				error: err,
+			});
+		});
 };

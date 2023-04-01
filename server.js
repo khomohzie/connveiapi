@@ -19,18 +19,18 @@ const app = express();
 
 // db
 const uri =
-	process.env.NODE_ENV === "production"
-		? process.env.DATABASE_CLOUD
-		: process.env.DATABASE;
+  process.env.NODE_ENV === "production"
+    ? process.env.DATABASE_CLOUD
+    : process.env.DATABASE;
 
 mongoose
-	.connect(uri, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useCreateIndex: true,
-		useFindAndModify: false,
-	})
-	.then(() => console.log("DB connected"));
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
+  .then(() => console.log("DB connected"));
 
 // middlewares
 app.use(morgan("dev"));
@@ -38,7 +38,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 // cors
 if (process.env.NODE_ENV == "development" || "production") {
-	app.use(cors({ origin: `${process.env.CLIENT_URL}` }));
+  app.use(cors({ origin: `${process.env.CLIENT_URL}` }));
 }
 // routes middleware
 app.use("/api", blogRoutes);
@@ -47,6 +47,10 @@ app.use("/api", userRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", tagRoutes);
 app.use("/api", formRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Welcome to Connvei's API. All routes begin with /api");
+});
 
 // port
 const port = process.env.PORT || 8000;

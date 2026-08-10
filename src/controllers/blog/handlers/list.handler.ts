@@ -17,9 +17,9 @@ const list = async (req: Request, res: Response, next: NextFunction) => {
     const data = await Blog.find({})
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name username")
+      .populate("postedBy", "_id name username photo")
       .select(
-        "_id title slug excerpt categories tags postedBy createdAt updatedAt"
+        "_id title slug excerpt photo categories tags postedBy createdAt updatedAt"
       )
       .exec();
 
@@ -46,12 +46,12 @@ const listAllBlogsCategoriesTags = async (
     const blogs = await Blog.find({})
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name username profile")
+      .populate("postedBy", "_id name username profile photo")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select(
-        "_id title slug excerpt categories tags postedBy createdAt updatedAt"
+        "_id title slug excerpt photo categories tags postedBy createdAt updatedAt"
       )
       .exec();
 
@@ -87,8 +87,8 @@ const listRelated = async (
       categories: { $in: categories },
     })
       .limit(limit)
-      .populate("postedBy", "_id name profile username")
-      .select("title slug excerpt postedBy createdAt updatedAt")
+      .populate("postedBy", "_id name profile username photo")
+      .select("title slug excerpt photo postedBy createdAt updatedAt")
       .exec();
 
     return new CustomResponse(res).success("Related blogs retrieved", blogs, 200);
@@ -120,7 +120,7 @@ const listSearch = async (
         { body: { $regex: search, $options: "i" } },
       ],
     })
-      .select("-photo -body")
+      .select("-body")
       .exec();
 
     return new CustomResponse(res).success("Search results", blogs, 200);
@@ -149,8 +149,8 @@ const listByUser = async (
     const data = await Blog.find({ postedBy: user._id })
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name username")
-      .select("_id title slug postedBy createdAt updatedAt")
+      .populate("postedBy", "_id name username photo")
+      .select("_id title slug photo postedBy createdAt updatedAt")
       .exec()
       .catch((err) => {
         throw new CustomException(400, errorHandler(err));

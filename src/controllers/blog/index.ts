@@ -9,7 +9,6 @@ import {
 import { read } from "./handlers/read.handler";
 import { update } from "./handlers/update.handler";
 import { remove } from "./handlers/remove.handler";
-import { photo } from "./handlers/photo.handler";
 
 export {
   create,
@@ -18,7 +17,6 @@ export {
   read,
   remove,
   update,
-  photo,
   listRelated,
   listSearch,
   listByUser,

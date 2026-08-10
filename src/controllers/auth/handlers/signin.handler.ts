@@ -42,13 +42,13 @@ const signin = async (
 
     res.cookie("token", token, tokenCookieOptions);
 
-    const { _id, username, name, role } = user;
+    const { _id, username, name, role, photo } = user;
 
     return new CustomResponse(res).success(
       "Signin success!",
       {
         token,
-        user: { _id, username, name, email: user.email, role },
+        user: { _id, username, name, email: user.email, role, photo },
       },
       200
     );

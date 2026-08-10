@@ -63,9 +63,9 @@ const read = async (req: Request, res: Response, next: NextFunction) => {
     const blogs = await Blog.find({ categories: category })
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name username")
+      .populate("postedBy", "_id name username photo")
       .select(
-        "_id title slug excerpt categories postedBy tags createdAt updatedAt"
+        "_id title slug excerpt photo categories postedBy tags createdAt updatedAt"
       )
       .exec();
 

@@ -65,13 +65,13 @@ const googleLogin = async (
 
     res.cookie("token", token, tokenCookieOptions);
 
-    const { _id, role, username } = user;
+    const { _id, role, username, photo } = user;
 
     return new CustomResponse(res).success(
       "Google login success!",
       {
         token,
-        user: { _id, email: user.email, name: user.name, role, username },
+        user: { _id, email: user.email, name: user.name, role, username, photo },
       },
       200
     );

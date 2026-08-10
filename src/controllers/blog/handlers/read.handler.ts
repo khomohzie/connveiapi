@@ -14,9 +14,9 @@ const read = async (req: Request, res: Response, next: NextFunction) => {
     const blog = await Blog.findOne({ slug })
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name username twitter instagram linkedin")
+      .populate("postedBy", "_id name username twitter instagram linkedin photo")
       .select(
-        "_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt"
+        "_id title body slug mtitle mdesc photo categories tags postedBy createdAt updatedAt"
       )
       .exec();
 

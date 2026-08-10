@@ -5,7 +5,6 @@ import {
   read,
   publicProfile,
   update,
-  photo,
   profiles,
 } from "../controllers/user";
 
@@ -18,7 +17,6 @@ const router: Router = express.Router();
 
 router.get("/user/profile", requireSignin, authMiddleware, read);
 router.get("/users/profiles", profiles);
-router.get("/user/photo/:username", photo);
 router.put(
   "/user/update",
   requireSignin,

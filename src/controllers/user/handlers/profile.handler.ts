@@ -43,10 +43,10 @@ const publicProfile = async (
     const blogs = await Blog.find({ postedBy: user._id })
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name")
+      .populate("postedBy", "_id name username photo")
       .limit(10)
       .select(
-        "_id title slug excerpt categories tags postedBy createdAt updatedAt"
+        "_id title slug excerpt photo categories tags postedBy createdAt updatedAt"
       )
       .exec()
       .catch((err) => {
@@ -54,7 +54,6 @@ const publicProfile = async (
       });
 
     const publicUser = user as any;
-    publicUser.photo = undefined;
     publicUser.hashed_password = undefined;
 
     return new CustomResponse(res).success(
@@ -76,7 +75,7 @@ const profiles = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const profiles = await User.find(
       {},
-      { _id: 0, name: 1, username: 1 }
+      { _id: 0, name: 1, username: 1, photo: 1 }
     ).exec();
 
     return new CustomResponse(res).success(

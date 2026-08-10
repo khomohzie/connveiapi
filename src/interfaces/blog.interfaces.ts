@@ -7,10 +7,7 @@ export interface IBlog {
   excerpt?: string;
   mtitle?: string;
   mdesc?: string;
-  photo?: {
-    data?: Buffer;
-    contentType?: string;
-  };
+  photo?: string;
   categories: ObjectId[];
   tags: ObjectId[];
   postedBy: ObjectId;

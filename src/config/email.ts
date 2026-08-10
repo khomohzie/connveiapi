@@ -1,81 +1,97 @@
-import nodemailer from "nodemailer";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
+import { google } from "googleapis";
+import MailComposer from "nodemailer/lib/mail-composer";
 
 /**
- * Nodemailer natively handles the Gmail OAuth2 flow: given the clientId,
- * clientSecret and refreshToken it fetches/refreshes the access token on its
- * own.
+ * Email is sent through the Gmail API (over HTTPS / port 443) instead of SMTP.
+ *
+ * Hosts such as Render block outbound SMTP ports (465/587), so the SMTP based
+ * Gmail transport that works locally silently fails once deployed. The Gmail
+ * API is unaffected by that restriction.
+ *
+ * Requirements:
+ *   - Enable the "Gmail API" for the project in Google Cloud Console.
+ *   - An OAuth2 client (client id + secret) and a refresh token generated for
+ *     the sending account (e.g. via the OAuth Playground) with the
+ *     `https://mail.google.com/` (or `gmail.send`) scope.
  */
-const createTransporter = async (): Promise<
-  | nodemailer.Transporter<SMTPTransport.SentMessageInfo, SMTPTransport.Options>
-  | Error
-> => {
-  try {
-    const options: SMTPTransport.Options = {
-      service: "gmail",
-      // `pass` is kept alongside the OAuth2 credentials to match the original
-      // config; nodemailer falls back to it if the OAuth2 flow is unavailable.
-      auth: {
-        type: "OAuth2",
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
-        clientId: process.env.OAUTH_CLIENTID,
-        clientSecret: process.env.OAUTH_CLIENT_SECRET,
-        refreshToken: process.env.OAUTH_REFRESH_TOKEN,
-      } as any,
-    };
 
-    const transporter = nodemailer.createTransport(options);
+const OAUTH_CLIENT_ID =
+  process.env.OAUTH_CLIENT_ID || process.env.OAUTH_CLIENTID;
+const FROM_EMAIL = process.env.OAUTH_EMAIL || process.env.MAIL_USERNAME;
 
-    return transporter;
-  } catch (err) {
-    console.error("Error creating transporter:", err);
-    return err as Error;
-  }
-};
+// The OAuth2 client refreshes the short-lived access token on its own using the
+// refresh token. Created once and reused for every message.
+const oauth2Client = new google.auth.OAuth2(
+  OAUTH_CLIENT_ID,
+  process.env.OAUTH_CLIENT_SECRET,
+  "https://developers.google.com/oauthplayground",
+);
+
+oauth2Client.setCredentials({
+  refresh_token: process.env.OAUTH_REFRESH_TOKEN,
+});
+
+const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
 const transporter = ({
   email,
   subject,
   content,
-  sender = `"${process.env.APP_NAME}" <${process.env.MAIL_USERNAME}>`,
   bcc,
+  replyTo,
 }: {
   email: string | string[];
   subject: string;
   content: string;
-  sender?: string;
   bcc?: string;
-}): Promise<SMTPTransport.SentMessageInfo> => {
+  replyTo?: string;
+}): Promise<any> => {
   return new Promise(async (resolve, reject) => {
-    const emailTransporter = await createTransporter();
-
-    if (emailTransporter instanceof Error) {
-      console.error(
-        "Failed to create email transporter:",
-        emailTransporter.message,
-      );
-
-      return reject(emailTransporter);
-    }
-
-    await emailTransporter
-      .sendMail({
-        from: sender,
+    try {
+      // Build a raw RFC-822 message. The Gmail API always sends as the
+      // authenticated account, so the submitter's address (if any) is used as
+      // Reply-To rather than From.
+      const mail = new MailComposer({
+        from: `"${process.env.APP_NAME}" <${FROM_EMAIL}>`,
         to: email,
-        bcc: bcc,
+        replyTo: replyTo,
+        bcc,
         subject,
-        text: content,
         html: content,
-      })
-      .then((msg) => {
-        console.log(msg);
-        resolve(msg);
-      })
-      .catch((err) => {
-        console.error(err);
-        reject(err);
+        textEncoding: "base64",
       });
+
+      // The Gmail API reads recipients from the message headers - there is no
+      // separate SMTP envelope - so the Bcc header must survive into the raw
+      // message or the Bcc recipient never receives the email. MailComposer
+      // strips it by default; `keepBcc` retains it. Gmail still removes the
+      // header from the copies delivered to the other recipients, so blind
+      // copy privacy is preserved.
+      const compiled = mail.compile();
+      (compiled as any).keepBcc = true;
+
+      const message: Buffer = await new Promise((res, rej) => {
+        compiled.build((err, msg) => (err ? rej(err) : res(msg)));
+      });
+
+      // base64url-encode the message per the Gmail API contract.
+      const rawMessage = message
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+
+      const result = await gmail.users.messages.send({
+        userId: "me",
+        requestBody: { raw: rawMessage },
+      });
+
+      console.log("Email sent successfully:", result.data.id);
+      resolve(result.data);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      reject(error);
+    }
   });
 };
 

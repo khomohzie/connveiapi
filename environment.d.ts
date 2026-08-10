@@ -20,12 +20,14 @@ declare global {
       // Google OAuth login
       GOOGLE_CLIENT_ID: string;
 
-      // Nodemailer (Gmail OAuth2)
+      // Gmail API (OAuth2) - sends over HTTPS so it works where SMTP is blocked
       MAIL_USERNAME: string;
       MAIL_PASSWORD: string;
       OAUTH_CLIENTID: string;
+      OAUTH_CLIENT_ID?: string; // alias for OAUTH_CLIENTID
       OAUTH_CLIENT_SECRET: string;
       OAUTH_REFRESH_TOKEN: string;
+      OAUTH_EMAIL?: string; // sending address; falls back to MAIL_USERNAME
       EMAIL_TO: string;
       EMAIL_FROM: string;
 

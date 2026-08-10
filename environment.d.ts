@@ -28,6 +28,11 @@ declare global {
       OAUTH_REFRESH_TOKEN: string;
       EMAIL_TO: string;
       EMAIL_FROM: string;
+
+      CLOUDINARY_API_KEY: string;
+      CLOUDINARY_API_SECRET: string;
+      CLOUDINARY_CLOUD_NAME: string;
+      CLOUDINARY_URL: string;
     }
   }
 

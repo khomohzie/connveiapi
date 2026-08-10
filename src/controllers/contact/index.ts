@@ -12,13 +12,15 @@ const contactForm = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, name, message } = req.body;
 
-    const result = await new Email(email).sendContactEmail(name, email, message);
+    const result = await new Email(
+      process.env.MAIL_USERNAME || "connvei.app@gmail.com",
+    ).sendContactEmail(name, email, message);
 
     if (result.status === true) {
       return new CustomResponse(res).success(
         "Message sent successfully",
         result.meta,
-        200
+        200,
       );
     }
 
@@ -36,24 +38,24 @@ const contactForm = async (req: Request, res: Response, next: NextFunction) => {
 const contactBlogAuthorForm = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { authorEmail, email, name, message } = req.body;
 
-    const maillist = [authorEmail, process.env.EMAIL_TO];
+    const maillist = [authorEmail, process.env.MAIL_USERNAME];
 
     const result = await new Email(maillist).sendBlogAuthorEmail(
       name,
       email,
-      message
+      message,
     );
 
     if (result.status === true) {
       return new CustomResponse(res).success(
         "Message sent successfully",
         result.meta,
-        200
+        200,
       );
     }
 
@@ -63,4 +65,4 @@ const contactBlogAuthorForm = async (
   }
 };
 
-export { contactForm, contactBlogAuthorForm };
+export { contactBlogAuthorForm, contactForm };

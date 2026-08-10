@@ -38,7 +38,7 @@ const transporter = ({
   email,
   subject,
   content,
-  sender = process.env.MAIL_USERNAME,
+  sender = `"${process.env.APP_NAME}" <${process.env.MAIL_USERNAME}>`,
 }: {
   email: string | string[];
   subject: string;
@@ -51,7 +51,7 @@ const transporter = ({
     if (emailTransporter instanceof Error) {
       console.error(
         "Failed to create email transporter:",
-        emailTransporter.message
+        emailTransporter.message,
       );
 
       return reject(emailTransporter);

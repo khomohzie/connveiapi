@@ -3,6 +3,7 @@ import slugify from "slugify";
 import Blog from "../../../models/blog.model";
 import { smartTrim, stripHtml } from "../../../helpers/blog.helper";
 import { errorHandler } from "../../../helpers/mongo.helper";
+import cloudinaryUpload from "../../../utils/cloudinary";
 import CustomException from "../../../utils/handlers/error.handler";
 import CustomResponse from "../../../utils/handlers/response.handler";
 
@@ -56,8 +57,17 @@ const create = async (req: Request, res: Response, next: NextFunction) => {
     blog.postedBy = req.user._id;
     blog.categories = categories.split(",");
     blog.tags = tags.split(",");
-    blog.photo.data = req.file.buffer;
-    blog.photo.contentType = req.file.mimetype;
+
+    // Upload the featured image to Cloudinary and store its secure URL.
+    const folder = `${req.profile.email}-${req.profile._id}`;
+    try {
+      blog.photo = await cloudinaryUpload(req.file.path, folder);
+    } catch (err) {
+      console.error(err);
+      return next(
+        new CustomException(400, "Failed to upload image. Please try again.")
+      );
+    }
 
     try {
       await blog.save();

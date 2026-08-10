@@ -51,9 +51,10 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    // Cloudinary secure URL of the profile photo.
     photo: {
-      data: Buffer,
-      contentType: String,
+      type: String,
+      default: "",
     },
     // Stores the JWT reset-password token. The original schema declared this as
     // `{ data: String, default: "" }` but it was always read/written as a plain

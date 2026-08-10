@@ -32,9 +32,10 @@ const blogSchema = new Schema(
     mdesc: {
       type: String,
     },
+    // Cloudinary secure URL of the featured image.
     photo: {
-      data: Buffer,
-      contentType: String,
+      type: String,
+      default: "",
     },
     categories: [{ type: ObjectId, ref: "Category", required: true }],
     tags: [{ type: ObjectId, ref: "Tag", required: true }],

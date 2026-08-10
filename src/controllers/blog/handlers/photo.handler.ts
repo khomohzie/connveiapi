@@ -4,7 +4,7 @@ import CustomException from "../../../utils/handlers/error.handler";
 
 /**
  * @route GET /api/blog/photo/:slug
- * @desc Stream a blog's featured image (raw image bytes)
+ * @desc Redirect to the blog's featured image (now hosted on Cloudinary)
  * @access Public
  */
 const photo = async (req: Request, res: Response, next: NextFunction) => {
@@ -13,12 +13,11 @@ const photo = async (req: Request, res: Response, next: NextFunction) => {
 
     const blog = await Blog.findOne({ slug }).select("photo").exec();
 
-    if (!blog || !blog.photo || !blog.photo.data) {
-      return next(new CustomException(400, "Photo not found"));
+    if (!blog || !blog.photo) {
+      return next(new CustomException(404, "Photo not found"));
     }
 
-    res.set("Content-Type", blog.photo.contentType as string);
-    return res.send(blog.photo.data);
+    return res.redirect(blog.photo);
   } catch (error) {
     return next(error);
   }

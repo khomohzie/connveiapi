@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import Blog from "../../../models/blog.model";
 import { smartTrim, stripHtml } from "../../../helpers/blog.helper";
 import { errorHandler } from "../../../helpers/mongo.helper";
+import cloudinaryUpload, { cloudinaryDelete } from "../../../utils/cloudinary";
 import CustomException from "../../../utils/handlers/error.handler";
 import CustomResponse from "../../../utils/handlers/response.handler";
 
@@ -50,8 +51,21 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
           new CustomException(400, "Image should be less than 10mb in size")
         );
       }
-      blog.photo.data = req.file.buffer;
-      blog.photo.contentType = req.file.mimetype;
+
+      // Upload the new image, then remove the old one from Cloudinary.
+      const oldPhoto = blog.photo;
+      const folder = `${req.profile.email}-${req.profile._id}`;
+      try {
+        blog.photo = await cloudinaryUpload(req.file.path, folder);
+        if (oldPhoto) {
+          await cloudinaryDelete(oldPhoto).catch((e) => console.error(e));
+        }
+      } catch (err) {
+        console.error(err);
+        return next(
+          new CustomException(400, "Failed to upload image. Please try again.")
+        );
+      }
     }
 
     try {

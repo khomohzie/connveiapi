@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import slugify from "slugify";
 import { errorHandler } from "../../../helpers/mongo.helper";
+import cloudinaryUpload, { cloudinaryDelete } from "../../../utils/cloudinary";
 import CustomException from "../../../utils/handlers/error.handler";
 import CustomResponse from "../../../utils/handlers/response.handler";
 
@@ -42,10 +43,23 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
     if (req.file) {
       if (req.file.size > 10000000) {
-        return next(new CustomException(400, "Image should be less than 1mb"));
+        return next(new CustomException(400, "Image should be less than 10mb"));
       }
-      user.photo.data = req.file.buffer;
-      user.photo.contentType = req.file.mimetype;
+
+      // Upload the new avatar, then remove the previous one from Cloudinary.
+      const oldPhoto = user.photo;
+      const folder = `${existingEmail}-${user._id}`;
+      try {
+        user.photo = await cloudinaryUpload(req.file.path, folder);
+        if (oldPhoto) {
+          await cloudinaryDelete(oldPhoto).catch((e: any) => console.error(e));
+        }
+      } catch (err) {
+        console.error(err);
+        return next(
+          new CustomException(400, "Failed to upload image. Please try again.")
+        );
+      }
     }
 
     try {
@@ -57,7 +71,6 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
     user.hashed_password = undefined;
     user.salt = undefined;
-    user.photo = undefined;
 
     return new CustomResponse(res).success("Profile updated", user, 200);
   } catch (error) {

@@ -150,6 +150,7 @@ const listByUser = async (
       .populate("categories", "_id name slug")
       .populate("tags", "_id name slug")
       .populate("postedBy", "_id name username photo")
+      .sort({ createdAt: -1 })
       .select("_id title slug photo postedBy createdAt updatedAt")
       .exec()
       .catch((err) => {

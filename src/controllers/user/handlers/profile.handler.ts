@@ -34,31 +34,39 @@ const publicProfile = async (
   try {
     const username = req.params.username;
 
+    // Pagination for infinite loading (defaults to the first page of 10).
+    const skip = req.query.skip ? parseInt(req.query.skip as string) : 0;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
     const user = await User.findOne({ username }).exec();
 
     if (!user) {
       return next(new CustomException(400, "User not found"));
     }
 
-    const blogs = await Blog.find({ postedBy: user._id })
-      .populate("categories", "_id name slug")
-      .populate("tags", "_id name slug")
-      .populate("postedBy", "_id name username photo")
-      .limit(10)
-      .select(
-        "_id title slug excerpt photo categories tags postedBy createdAt updatedAt"
-      )
-      .exec()
-      .catch((err) => {
-        throw new CustomException(400, errorHandler(err));
-      });
+    const [blogs, count] = await Promise.all([
+      Blog.find({ postedBy: user._id })
+        .populate("categories", "_id name slug")
+        .populate("tags", "_id name slug")
+        .populate("postedBy", "_id name username photo")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select(
+          "_id title slug excerpt photo categories tags postedBy createdAt updatedAt"
+        )
+        .exec(),
+      Blog.countDocuments({ postedBy: user._id }),
+    ]).catch((err) => {
+      throw new CustomException(400, errorHandler(err));
+    });
 
     const publicUser = user as any;
     publicUser.hashed_password = undefined;
 
     return new CustomResponse(res).success(
       "Public profile retrieved",
-      { user: publicUser, blogs },
+      { user: publicUser, blogs, count },
       200
     );
   } catch (error) {

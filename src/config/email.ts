@@ -39,11 +39,13 @@ const transporter = ({
   subject,
   content,
   sender = `"${process.env.APP_NAME}" <${process.env.MAIL_USERNAME}>`,
+  bcc,
 }: {
   email: string | string[];
   subject: string;
   content: string;
   sender?: string;
+  bcc?: string;
 }): Promise<SMTPTransport.SentMessageInfo> => {
   return new Promise(async (resolve, reject) => {
     const emailTransporter = await createTransporter();
@@ -61,6 +63,7 @@ const transporter = ({
       .sendMail({
         from: sender,
         to: email,
+        bcc: bcc,
         subject,
         text: content,
         html: content,

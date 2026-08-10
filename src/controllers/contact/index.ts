@@ -43,9 +43,7 @@ const contactBlogAuthorForm = async (
   try {
     const { authorEmail, email, name, message } = req.body;
 
-    const maillist = [authorEmail, process.env.MAIL_USERNAME];
-
-    const result = await new Email(maillist).sendBlogAuthorEmail(
+    const result = await new Email(authorEmail).sendBlogAuthorEmail(
       name,
       email,
       message,

@@ -17,13 +17,19 @@ class Email {
     this.email = email;
   }
 
-  private async send(subject: string, content: string, sender?: string) {
+  private async send(
+    subject: string,
+    content: string,
+    sender?: string,
+    bcc?: string,
+  ) {
     try {
       const data = await transporter({
         email: this.email,
         subject,
         content,
         sender,
+        bcc,
       });
 
       return { status: true, message: "Email sent successfully", meta: data };
@@ -68,11 +74,7 @@ class Email {
       ${SENSITIVE_FOOTER}
     `;
 
-    return this.send(
-      `Contact form - ${process.env.APP_NAME}`,
-      content,
-      email
-    );
+    return this.send(`Contact form - ${process.env.APP_NAME}`, content, email);
   }
 
   // Message to a blog author
@@ -88,7 +90,8 @@ class Email {
     return this.send(
       `Someone messaged you from ${process.env.APP_NAME}`,
       content,
-      email
+      email,
+      process.env.MAIL_USERNAME,
     );
   }
 }

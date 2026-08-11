@@ -19,10 +19,50 @@ export const smartTrim = (
   return trimmedStr;
 };
 
+const NAMED_ENTITIES: Record<string, string> = {
+  nbsp: " ",
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  hellip: "…",
+  mdash: "—",
+  ndash: "–",
+  rsquo: "’",
+  lsquo: "‘",
+  ldquo: "“",
+  rdquo: "”",
+};
+
+/** Decode common HTML entities (e.g. `&nbsp;`, `&#39;`) into their characters. */
+export const decodeEntities = (input: string): string => {
+  return input.replace(
+    /&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g,
+    (match, code: string) => {
+      if (code[0] === "#") {
+        const num =
+          code[1] === "x" || code[1] === "X"
+            ? parseInt(code.slice(2), 16)
+            : parseInt(code.slice(1), 10);
+        try {
+          return Number.isFinite(num) ? String.fromCodePoint(num) : match;
+        } catch {
+          return match;
+        }
+      }
+      return NAMED_ENTITIES[code] ?? match;
+    }
+  );
+};
+
 /**
- * Strip HTML tags from a string. Small dependency-free replacement for the old
- * `string-strip-html` package - enough for building meta descriptions.
+ * Strip HTML to clean plain text: remove tags, decode entities and collapse
+ * whitespace. Used to build excerpts and meta descriptions from the editor's
+ * HTML output.
  */
 export const stripHtml = (str: string): string => {
-  return str.replace(/<[^>]*>/g, "").trim();
+  return decodeEntities(str.replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
 };

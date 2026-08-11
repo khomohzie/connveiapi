@@ -33,8 +33,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     blog.slug = slugBeforeMerge;
 
     if (body) {
-      blog.excerpt = smartTrim(body, 320, " ", " ...");
-      blog.mdesc = stripHtml(body.substring(0, 160));
+      blog.excerpt = smartTrim(stripHtml(body), 320, " ", " ...");
+      blog.mdesc = stripHtml(body).substring(0, 160);
     }
 
     if (categories) {

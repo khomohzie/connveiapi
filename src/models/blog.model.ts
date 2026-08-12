@@ -37,6 +37,13 @@ const blogSchema = new Schema(
       type: String,
       default: "",
     },
+    // When true, this blog is pinned as the homepage "featured story of the
+    // moment". Only one blog is featured at a time (enforced in the handler).
+    featured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     categories: [{ type: ObjectId, ref: "Category", required: true }],
     tags: [{ type: ObjectId, ref: "Tag", required: true }],
     postedBy: {

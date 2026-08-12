@@ -9,6 +9,7 @@ import {
 import { read } from "./handlers/read.handler";
 import { update } from "./handlers/update.handler";
 import { remove } from "./handlers/remove.handler";
+import { featured, feature } from "./handlers/feature.handler";
 
 export {
   create,
@@ -20,4 +21,6 @@ export {
   listRelated,
   listSearch,
   listByUser,
+  featured,
+  feature,
 };

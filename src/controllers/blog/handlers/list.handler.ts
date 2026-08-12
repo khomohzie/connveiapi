@@ -151,7 +151,7 @@ const listByUser = async (
       .populate("tags", "_id name slug")
       .populate("postedBy", "_id name username photo")
       .sort({ createdAt: -1 })
-      .select("_id title slug photo postedBy createdAt updatedAt")
+      .select("_id title slug photo featured postedBy createdAt updatedAt")
       .exec()
       .catch((err) => {
         throw new CustomException(400, errorHandler(err));

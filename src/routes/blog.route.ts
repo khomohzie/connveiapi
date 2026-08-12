@@ -11,6 +11,8 @@ import {
   listRelated,
   listSearch,
   listByUser,
+  featured,
+  feature,
 } from "../controllers/blog";
 
 import {
@@ -33,6 +35,8 @@ router.get("/blogs", list);
 router.post("/blogs-categories-tags", listAllBlogsCategoriesTags);
 router.get("/blogs/search", listSearch);
 router.post("/blogs/related", listRelated);
+router.get("/blogs/featured", featured);
+router.put("/blog/:slug/feature", requireSignin, adminMiddleware, feature);
 router.get("/blog/:slug", read);
 router.delete("/blog/:slug", requireSignin, adminMiddleware, remove);
 router.put(

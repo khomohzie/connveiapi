@@ -16,7 +16,7 @@ const read = async (req: Request, res: Response, next: NextFunction) => {
       .populate("tags", "_id name slug")
       .populate("postedBy", "_id name username twitter instagram linkedin photo")
       .select(
-        "_id title body slug mtitle mdesc photo categories tags postedBy createdAt updatedAt"
+        "_id title body slug mtitle mdesc photo featured categories tags postedBy createdAt updatedAt"
       )
       .exec();
 

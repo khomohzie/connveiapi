@@ -1,9 +1,8 @@
 # Connvei API
 
 The backend for **Connvei**, a blogging platform. Originally written in plain
-JavaScript, now rewritten in **TypeScript** following the same architecture as
-`prof-komolafe-api` (controllers → handlers, services, models, routes,
-middlewares, config, custom response/exception handlers).
+JavaScript, now rewritten in **TypeScript** following the architecture - controllers → handlers, services, models, routes,
+middlewares, config, custom response/exception handlers.
 
 Every route is served under `/api`.
 
@@ -13,8 +12,7 @@ Every route is served under `/api`.
 - MongoDB via Mongoose 8
 - JWT auth (`Authorization: Bearer <token>`, HS256)
 - Zod request validation
-- Multer (in-memory) for image uploads — photos are stored in MongoDB as a
-  `Buffer` and streamed back through the `/photo` endpoints
+- Multer (persistent storage) for image uploads — photos are stored in Cloudinary
 - Nodemailer (Gmail OAuth2) for transactional email
 
 ## Project structure
@@ -82,6 +80,6 @@ selects `DATABASE_CLOUD` over `DATABASE`, exactly as before.
   `/api/blog`, `/api/blogs-categories-tags`, `/api/user/photo/:username`, …).
 - **Response bodies now use the `CustomResponse` envelope** shown above — the
   frontend needs to read `res.data` instead of the raw body.
-- Uploads moved from `formidable` to `multer` (memory storage); the stored
-  shape (`photo: { data: Buffer, contentType: String }`) is unchanged.
+- Uploads moved from `formidable` to `multer` (persistent storage); then uploaded to
+  Cloudinary and the returned url is saved as (`photo: url `).
 - Email verification / password reset stay JWT-based (no Redis/session store).
